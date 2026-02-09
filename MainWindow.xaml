@@ -86,6 +86,21 @@
         <Style x:Key="KeyboardLayoutSwitchButtonStyle" TargetType="Button" BasedOn="{StaticResource WebsiteButtonStyle}">
             <Setter Property="Padding" Value="6,4"/>
         </Style>
+
+        <Style x:Key="WebsiteIconStyle" TargetType="Image">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IconPath}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IconPath}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -128,11 +143,16 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Content="{Binding Name}"
+                            <Button
                                     Command="{Binding DataContext.NavigateToWebsiteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource WebsiteButtonStyle}"
-                                    Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                                    Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Image Source="{Binding IconPath}" Style="{StaticResource WebsiteIconStyle}"/>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
