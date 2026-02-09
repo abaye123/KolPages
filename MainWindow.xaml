@@ -1,0 +1,341 @@
+<Window x:Class="KolPages.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d"
+        Title="KolPages"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        Left="{Binding WindowLeft, Mode=TwoWay}"
+        Top="{Binding WindowTop, Mode=TwoWay}"
+        Width="{Binding WindowWidth, Mode=TwoWay}"
+        Height="{Binding WindowHeight, Mode=TwoWay}"
+        Background="White">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="InverseVisibility" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="False">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="KeyboardLayoutHebrew" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding KeyboardLayout}" Value="Hebrew">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="KeyboardLayoutEnglish" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding KeyboardLayout}" Value="English">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="KeyboardLayoutNumbers" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding KeyboardLayout}" Value="Numbers">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="WebsiteButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="Background" Value="#007bff"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#0056b3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="KeyboardLayoutSwitchButtonStyle" TargetType="Button" BasedOn="{StaticResource WebsiteButtonStyle}">
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Button Content="☰"
+                FontSize="32"
+                Command="{Binding ToggleExpandCommand}"
+                Style="{StaticResource InverseVisibility}"
+                Background="#007bff"
+                Foreground="White"
+                BorderThickness="0"/>
+
+        <Grid Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Background="#f8f9fa">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="✕"
+                        FontSize="20"
+                        Command="{Binding ToggleExpandCommand}"
+                        Style="{StaticResource WebsiteButtonStyle}"
+                        Background="#dc3545"/>
+
+                <ItemsControl Grid.Column="1"
+                              ItemsSource="{Binding Websites}"
+                              HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Name}"
+                                    Command="{Binding DataContext.NavigateToWebsiteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource WebsiteButtonStyle}"
+                                    Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="אודות"
+                        Command="{Binding ShowAboutCommand}"
+                        Style="{StaticResource WebsiteButtonStyle}"
+                        Background="#6c757d"/>
+                    <Button Content="⌨"
+                        FontSize="20"
+                        Command="{Binding ToggleKeyboardCommand}"
+                        Style="{StaticResource WebsiteButtonStyle}"
+                        Background="#28a745"/>
+                </StackPanel>
+            </Grid>
+
+            <wv2:WebView2 x:Name="webView"
+                          Grid.Row="1"
+                          Visibility="{Binding IsBrowserVisible, Converter={StaticResource BoolToVis}}"/>
+
+            <Grid Grid.Row="1"
+                Background="#f6f7fb"
+                FlowDirection="RightToLeft"
+                Visibility="{Binding IsAboutVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White"
+                        BorderBrush="#e2e8f0"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="28"
+                        Margin="24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="720">
+                    <StackPanel>
+                        <TextBlock Text="KolPages" FontSize="28" FontWeight="SemiBold" Foreground="#0d6efd"/>
+                        <TextBlock Text="by abaye" Margin="0,6,0,12" Foreground="#4338ca" FontSize="12" Background="#eef2ff" Padding="8,4" TextAlignment="Center" Width="90"/>
+
+                        <TextBlock Text="תוכנה לניהול גישה מהירה לעמודים נבחרים, עם התאמות ניקוי ותצוגה." Margin="0,0,0,16"/>
+
+                        <TextBlock Text="מפתח" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock Text="פרטים על המפתח יופיעו כאן." Foreground="#6b7280" Margin="0,0,0,16"/>
+
+                        <Border Background="#eef2f7" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="12" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="לעילוי נשמת" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
+                                <TextBlock Text="ר' משה ב&quot;ר אברהם זצ&quot;ל" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Margin="0,18,0,0"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding IsLoadingVisible, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="טוען..." Foreground="#6b7280" Margin="0,0,0,8"/>
+                            <Grid Width="44" Height="44">
+                                <Ellipse Stroke="#e2e8f0" StrokeThickness="6"/>
+                                <Ellipse Stroke="#0d6efd" StrokeThickness="6" StrokeDashArray="3,4" StrokeDashCap="Round">
+                                    <Ellipse.RenderTransform>
+                                        <RotateTransform x:Name="LoadingSpin" CenterX="22" CenterY="22"/>
+                                    </Ellipse.RenderTransform>
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="2"
+                  Background="#f8f9fa"
+                  Margin="10"
+                Visibility="{Binding IsKeyboardVisible, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                    <Button Content="HE" Command="{Binding SetKeyboardLayoutCommand}" CommandParameter="Hebrew" Style="{StaticResource KeyboardLayoutSwitchButtonStyle}" Width="60" Height="35" Margin="2"/>
+                    <Button Content="EN" Command="{Binding SetKeyboardLayoutCommand}" CommandParameter="English" Style="{StaticResource KeyboardLayoutSwitchButtonStyle}" Width="60" Height="35" Margin="2"/>
+                    <Button Content="123" Command="{Binding SetKeyboardLayoutCommand}" CommandParameter="Numbers" Style="{StaticResource KeyboardLayoutSwitchButtonStyle}" Width="60" Height="35" Margin="2"/>
+                </StackPanel>
+
+                <Grid Grid.Row="1">
+                    <Grid Style="{StaticResource KeyboardLayoutHebrew}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="ק" Command="{Binding InsertTextCommand}" CommandParameter="ק" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ר" Command="{Binding InsertTextCommand}" CommandParameter="ר" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="א" Command="{Binding InsertTextCommand}" CommandParameter="א" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ט" Command="{Binding InsertTextCommand}" CommandParameter="ט" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ו" Command="{Binding InsertTextCommand}" CommandParameter="ו" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ן" Command="{Binding InsertTextCommand}" CommandParameter="ן" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ם" Command="{Binding InsertTextCommand}" CommandParameter="ם" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="פ" Command="{Binding InsertTextCommand}" CommandParameter="פ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="ש" Command="{Binding InsertTextCommand}" CommandParameter="ש" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ד" Command="{Binding InsertTextCommand}" CommandParameter="ד" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ג" Command="{Binding InsertTextCommand}" CommandParameter="ג" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="כ" Command="{Binding InsertTextCommand}" CommandParameter="כ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ע" Command="{Binding InsertTextCommand}" CommandParameter="ע" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="י" Command="{Binding InsertTextCommand}" CommandParameter="י" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ח" Command="{Binding InsertTextCommand}" CommandParameter="ח" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ל" Command="{Binding InsertTextCommand}" CommandParameter="ל" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ך" Command="{Binding InsertTextCommand}" CommandParameter="ך" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ף" Command="{Binding InsertTextCommand}" CommandParameter="ף" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="ז" Command="{Binding InsertTextCommand}" CommandParameter="ז" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ס" Command="{Binding InsertTextCommand}" CommandParameter="ס" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ב" Command="{Binding InsertTextCommand}" CommandParameter="ב" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ה" Command="{Binding InsertTextCommand}" CommandParameter="ה" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="נ" Command="{Binding InsertTextCommand}" CommandParameter="נ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="מ" Command="{Binding InsertTextCommand}" CommandParameter="מ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="צ" Command="{Binding InsertTextCommand}" CommandParameter="צ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ת" Command="{Binding InsertTextCommand}" CommandParameter="ת" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="ץ" Command="{Binding InsertTextCommand}" CommandParameter="ץ" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Style="{StaticResource KeyboardLayoutEnglish}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="Q" Command="{Binding InsertTextCommand}" CommandParameter="Q" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="W" Command="{Binding InsertTextCommand}" CommandParameter="W" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="E" Command="{Binding InsertTextCommand}" CommandParameter="E" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="R" Command="{Binding InsertTextCommand}" CommandParameter="R" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="T" Command="{Binding InsertTextCommand}" CommandParameter="T" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="Y" Command="{Binding InsertTextCommand}" CommandParameter="Y" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="U" Command="{Binding InsertTextCommand}" CommandParameter="U" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="I" Command="{Binding InsertTextCommand}" CommandParameter="I" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="O" Command="{Binding InsertTextCommand}" CommandParameter="O" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="P" Command="{Binding InsertTextCommand}" CommandParameter="P" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="A" Command="{Binding InsertTextCommand}" CommandParameter="A" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="S" Command="{Binding InsertTextCommand}" CommandParameter="S" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="D" Command="{Binding InsertTextCommand}" CommandParameter="D" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="F" Command="{Binding InsertTextCommand}" CommandParameter="F" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="G" Command="{Binding InsertTextCommand}" CommandParameter="G" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="H" Command="{Binding InsertTextCommand}" CommandParameter="H" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="J" Command="{Binding InsertTextCommand}" CommandParameter="J" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="K" Command="{Binding InsertTextCommand}" CommandParameter="K" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="L" Command="{Binding InsertTextCommand}" CommandParameter="L" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="Z" Command="{Binding InsertTextCommand}" CommandParameter="Z" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="X" Command="{Binding InsertTextCommand}" CommandParameter="X" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="C" Command="{Binding InsertTextCommand}" CommandParameter="C" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="V" Command="{Binding InsertTextCommand}" CommandParameter="V" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="B" Command="{Binding InsertTextCommand}" CommandParameter="B" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="N" Command="{Binding InsertTextCommand}" CommandParameter="N" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="M" Command="{Binding InsertTextCommand}" CommandParameter="M" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Style="{StaticResource KeyboardLayoutNumbers}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="1" Command="{Binding InsertTextCommand}" CommandParameter="1" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="2" Command="{Binding InsertTextCommand}" CommandParameter="2" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="3" Command="{Binding InsertTextCommand}" CommandParameter="3" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="4" Command="{Binding InsertTextCommand}" CommandParameter="4" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="5" Command="{Binding InsertTextCommand}" CommandParameter="5" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="6" Command="{Binding InsertTextCommand}" CommandParameter="6" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="7" Command="{Binding InsertTextCommand}" CommandParameter="7" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="8" Command="{Binding InsertTextCommand}" CommandParameter="8" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="9" Command="{Binding InsertTextCommand}" CommandParameter="9" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                            <Button Content="0" Command="{Binding InsertTextCommand}" CommandParameter="0" Style="{StaticResource WebsiteButtonStyle}" Width="50" Height="50" Margin="2"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                    <Button Content="רווח" Command="{Binding InsertTextCommand}" CommandParameter=" " Style="{StaticResource WebsiteButtonStyle}" Width="200" Height="50" Margin="2"/>
+                    <Button Content="⌫" Command="{Binding DeleteLastCharacterCommand}" Style="{StaticResource WebsiteButtonStyle}" Width="80" Height="50" Margin="2" Background="#ffc107"/>
+                    <Button Content="↵" Command="{Binding PressEnterCommand}" Style="{StaticResource WebsiteButtonStyle}" Width="80" Height="50" Margin="2" Background="#28a745"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
