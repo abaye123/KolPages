@@ -6,6 +6,8 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="KolPages"
+        ShowInTaskbar="False"
+        ShowActivated="False"
         WindowStyle="None"
         ResizeMode="NoResize"
         Topmost="True"
